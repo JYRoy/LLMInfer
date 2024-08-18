@@ -9,7 +9,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 set(CMAKE_CUDA_STANDARD 17)
 
-find_package(GTest REQUIRED)
+set(GTEST_ROOT /usr/local)
+find_package(GTest REQUIRED PATHS ${GTEST_ROOT}/lib/cmake/GTest)
 find_package(glog REQUIRED)
 find_package(Armadillo REQUIRED)
 
