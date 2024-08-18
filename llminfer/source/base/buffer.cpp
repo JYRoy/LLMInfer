@@ -60,4 +60,8 @@ std::shared_ptr<DeviceAllocator> Buffer::allocator() const {
   return allocator_;
 }
 
+DeviceType Buffer::device_type() const {
+  return device_type_;
+}
+
 } // namespace base
