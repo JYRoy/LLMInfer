@@ -1,17 +1,15 @@
 # LLMInfer
 
-[中文版](./README-cn.md)
+自制的大模型推理框架
 
-An Inference Acceleration Framework for Large Language Model
-
-## Contents
+## 目录
 
 - [LLMInfer](#llminfer)
-  - [Contents](#contents)
-  - [Requirments](#requirments)
-  - [Installation](#installation)
+  - [目录](#目录)
+  - [环境要求](#环境要求)
+  - [安装方式](#安装方式)
 
-## Requirments
+## 环境要求
 
 - C++ 17+
 - GCC 11.4.0
@@ -20,7 +18,7 @@ An Inference Acceleration Framework for Large Language Model
 - glog 0.7.X (commit id b3b9eb9)
 - setencepiece 0.2.X (commit id 499380)
 
-## Installation
+## 安装方式
 
 ```shell
 mkdir build

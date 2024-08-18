@@ -16,7 +16,19 @@ find_package(Armadillo REQUIRED)
 aux_source_directory(. ROOT_DIR)
 aux_source_directory(llminfer MAIN_DIR)
 aux_source_directory(llminfer/source SRCS_DIR)
+aux_source_directory(llminfer/source/base/ DIR_BASE)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
+
+add_library(llminfer SHARED  ${DIR_BASE})
+target_link_libraries(llminfer sentencepiece glog::glog gtest gtest_main pthread cudart armadillo)
+target_link_directories(llminfer PUBLIC ${CMAKE_CUDA_COMPILER_LIBRARY_ROOT}/lib64)
+
+target_include_directories(llminfer PUBLIC ${glog_INCLUDE_DIR})
+target_include_directories(llminfer PUBLIC ${PROJECT_SOURCE_DIR}/llminfer/include)
+target_include_directories(llminfer PUBLIC ${Armadillo_INCLUDE_DIR})
+target_include_directories(llminfer PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+
+set_target_properties(llminfer PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 add_subdirectory(test)
