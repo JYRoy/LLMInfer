@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.10)  # 必须
 set(CMAKE_CUDA_COMPILER "/usr/local/cuda/bin/nvcc")
 
 project(llm_info CXX CUDA)
+include(cmake/cuda.cmake)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
