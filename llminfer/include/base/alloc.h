@@ -98,8 +98,7 @@ class DeviceAlloctorFactory {
     } else if (device_type == base::DeviceType::kDeviceCUDA) {
       return CPUDeviceAllocatorFactory::get_instance();
     } else {
-      std::cout << "This device type of allocator is not supported!"
-                << std::endl;
+      LOG(FATAL) << "This device type of allocator is not supported!";
       return nullptr;
     }
   }

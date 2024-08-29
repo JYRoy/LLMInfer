@@ -1,6 +1,7 @@
 #ifndef __BASE_BASE_H_
 #define __BASE_BASE_H_
 
+#include <glog/logging.h>
 #include <cstdint>
 #include <string>
 
