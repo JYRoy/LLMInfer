@@ -1,9 +1,9 @@
 #ifndef __BASE_ALLOC_H__
 #define __BASE_ALLOC_H__
 
+#include <iostream>
 #include <map>
 #include <memory>
-#include <iostream>
 #include "base.h"
 
 namespace base {
@@ -27,13 +27,13 @@ class DeviceAllocator {
 
   virtual void* allocate(size_t byte_size) const = 0;
 
-  //   virtual void memcpy(
-  //       const void* src_ptr,
-  //       void* dest_ptr,
-  //       size_t byte_size,
-  //       MemcpyKind memcpy_kind = MemcpyKind::kMemcpyH2H,
-  //       void* stream = nullptr,
-  //       bool need_sync = false) const;
+  virtual void memcpy(
+      const void* src_ptr,
+      void* dest_ptr,
+      size_t byte_size,
+      MemcpyKind memcpy_kind = MemcpyKind::kMemcpyH2H,
+      void* stream = nullptr,
+      bool need_sync = false) const;
 
   //   virtual void memset_zero(
   //       void* ptr,
@@ -98,7 +98,8 @@ class DeviceAlloctorFactory {
     } else if (device_type == base::DeviceType::kDeviceCUDA) {
       return CPUDeviceAllocatorFactory::get_instance();
     } else {
-      std::cout << "This device type of allocator is not supported!" << std::endl;
+      std::cout << "This device type of allocator is not supported!"
+                << std::endl;
       return nullptr;
     }
   }

@@ -1,6 +1,6 @@
 #ifndef __TENSOR_TENSOR_H__
 #define __TENSOR_TENSOR_H__
-
+#include <driver_types.h>
 #include <glog/logging.h>
 #include <armadillo>
 #include <memory>
@@ -94,6 +94,12 @@ class Tensor {
 
   template <typename T>
   const T& index(int64_t offset) const;
+
+  tensor::Tensor clone() const;
+
+  void to_cpu();
+
+  void to_cuda(cudaStream_t stream = nullptr);
 
  private:
   size_t size_ = 0; // number of elements

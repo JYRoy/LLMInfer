@@ -187,4 +187,56 @@ std::vector<size_t> Tensor::strides() const {
   return strides;
 }
 
+Tensor Tensor::clone() const {
+  Tensor new_tensor = *this;
+  size_t byte_size = this->byte_size();
+
+  auto allocator = buffer_->allocator();
+  new_tensor.buffer_ = std::make_shared<base::Buffer>(byte_size, allocator);
+  new_tensor.buffer_->copy_from(buffer_.get());
+  return new_tensor;
+}
+
+void Tensor::to_cuda(cudaStream_t stream) {
+  CHECK_NE(buffer_, nullptr);
+  const base::DeviceType device_type = this->device_type();
+  if (device_type == base::DeviceType::kDeviceUnknown) {
+    LOG(ERROR) << "The device type of the tensor is unknown.";
+  } else if (device_type == base::DeviceType::kDeviceCPU) {
+    size_t byte_size = this->byte_size();
+    auto cu_alloc = base::CUDADeviceAllocatorFactory::get_instance();
+    auto cu_buffer = std::make_shared<base::Buffer>(byte_size, cu_alloc);
+    cu_alloc->memcpy(
+        buffer_->ptr(),
+        cu_buffer->ptr(),
+        byte_size,
+        base::MemcpyKind::kMemcpyH2D,
+        stream);
+    this->buffer_ = cu_buffer;
+  } else {
+    LOG(INFO) << "The device type of the tensor is already cpu.";
+  }
+}
+
+void Tensor::to_cpu() {
+  CHECK_NE(buffer_, nullptr);
+  const base::DeviceType device_type = this->device_type();
+
+  if (device_type == base::DeviceType::kDeviceUnknown) {
+    LOG(ERROR) << "The device type of the tensor is unknown.";
+  } else if (device_type == base::DeviceType::kDeviceCUDA) {
+    size_t byte_size = this->byte_size();
+    auto cpu_alloc = base::CPUDeviceAllocatorFactory::get_instance();
+    auto cpu_buffer = std::make_shared<base::Buffer>(byte_size, cpu_alloc);
+    cpu_alloc->memcpy(
+        buffer_->ptr(),
+        cpu_buffer->ptr(),
+        byte_size,
+        base::MemcpyKind::kMemcpyD2H);
+    this->buffer_ = cpu_buffer;
+  } else {
+    LOG(INFO) << "The device type of the tensor is already cuda.";
+  }
+}
+
 } // namespace tensor

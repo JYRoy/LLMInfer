@@ -1,4 +1,5 @@
 #include "base/buffer.h"
+#include <glog/logging.h>
 
 namespace base {
 Buffer::Buffer(
@@ -62,6 +63,70 @@ std::shared_ptr<DeviceAllocator> Buffer::allocator() const {
 
 DeviceType Buffer::device_type() const {
   return device_type_;
+}
+
+void Buffer::copy_from(const Buffer& buffer) const {
+  CHECK(allocator_ != nullptr);
+  CHECK(buffer.ptr_ != nullptr);
+
+  size_t byte_size =
+      byte_size_ < buffer.byte_size_ ? byte_size_ : buffer.byte_size_;
+  const DeviceType& buffer_device = buffer.device_type();
+  const DeviceType& current_device = this->device_type();
+  CHECK(
+      buffer_device != DeviceType::kDeviceUnknown &&
+      current_device != DeviceType::kDeviceUnknown);
+
+  if (buffer_device == DeviceType::kDeviceCPU &&
+      current_device == DeviceType::kDeviceCPU) {
+    return allocator_->memcpy(buffer.ptr(), this->ptr_, byte_size);
+  } else if (
+      buffer_device == DeviceType::kDeviceCUDA &&
+      current_device == DeviceType::kDeviceCPU) {
+    return allocator_->memcpy(
+        buffer.ptr(), this->ptr_, byte_size, MemcpyKind::kMemcpyD2H);
+  } else if (
+      buffer_device == DeviceType::kDeviceCPU &&
+      current_device == DeviceType::kDeviceCUDA) {
+    return allocator_->memcpy(
+        buffer.ptr(), this->ptr_, byte_size, MemcpyKind::kMemcpyH2D);
+  } else {
+    return allocator_->memcpy(
+        buffer.ptr(), this->ptr_, byte_size, MemcpyKind::kMemcpyD2D);
+  }
+}
+
+void Buffer::copy_from(const Buffer* buffer) const {
+  CHECK(allocator_ != nullptr);
+  CHECK(buffer != nullptr || buffer->ptr_ != nullptr);
+
+  size_t src_size = byte_size_;
+  size_t dest_size = buffer->byte_size_;
+  size_t byte_size = src_size < dest_size ? src_size : dest_size;
+
+  const DeviceType& buffer_device = buffer->device_type();
+  const DeviceType& current_device = this->device_type();
+  CHECK(
+      buffer_device != DeviceType::kDeviceUnknown &&
+      current_device != DeviceType::kDeviceUnknown);
+
+  if (buffer_device == DeviceType::kDeviceCPU &&
+      current_device == DeviceType::kDeviceCPU) {
+    return allocator_->memcpy(buffer->ptr_, this->ptr_, byte_size);
+  } else if (
+      buffer_device == DeviceType::kDeviceCUDA &&
+      current_device == DeviceType::kDeviceCPU) {
+    return allocator_->memcpy(
+        buffer->ptr_, this->ptr_, byte_size, MemcpyKind::kMemcpyD2H);
+  } else if (
+      buffer_device == DeviceType::kDeviceCPU &&
+      current_device == DeviceType::kDeviceCUDA) {
+    return allocator_->memcpy(
+        buffer->ptr_, this->ptr_, byte_size, MemcpyKind::kMemcpyH2D);
+  } else {
+    return allocator_->memcpy(
+        buffer->ptr_, this->ptr_, byte_size, MemcpyKind::kMemcpyD2H);
+  }
 }
 
 } // namespace base
