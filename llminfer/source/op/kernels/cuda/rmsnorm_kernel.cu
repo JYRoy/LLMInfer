@@ -3,7 +3,7 @@
 
 namespace kernel {
 
-static __global__ void row_rmsnorm_f32(
+static __global__ void row_rmsnorm_f32_warp_reduce(
     float* input,
     float* weight,
     float* output,
@@ -32,6 +32,36 @@ static __global__ void row_rmsnorm_f32(
   }
 }
 
+static __global__ void row_rmsnorm_f32_block_reduce(
+    float* input,
+    float* weight,
+    float* output,
+    int size,
+    float eps) {
+  const int tid = threadIdx.x;
+
+  float sum = 0.0f;
+  // tid = 0, in[0] + in[128] + in[256] ...
+  for (int i = tid; i < size; i += blockDim.x) {
+    sum = input[i] * input[i];
+  }
+
+  using BlockReduce = cub::BlockReduce<float, 128>;
+  __shared__ typename BlockReduce::TempStorage temp;
+  __shared__ float shared_val;
+  sum = BlockReduce(temp).Sum(sum);
+  if (threadIdx.x == 0) {
+    shared_val = sum;
+  }
+  __syncthreads();
+
+  sum = shared_val;
+  const float scale = rsqrtf(sum / static_cast<float>(size) + eps);
+  for (int i = tid; i < size; i += blockDim.x) {
+    output[i] = scale * input[i] * weight[i];
+  }
+}
+
 void rmsnorm_kernel_cuda(
     const tensor::Tensor& input,
     const tensor::Tensor& weight,
@@ -54,10 +84,10 @@ void rmsnorm_kernel_cuda(
   constexpr int threads_num = 128;
   if (stream) {
     cudaStream_t stream_ = static_cast<cudaStream_t>(stream);
-    row_rmsnorm_f32<<<1, threads_num, 0, stream_>>>(
+    row_rmsnorm_f32_block_reduce<<<1, threads_num, 0, stream_>>>(
         input_ptr, weight_ptr, output_ptr, size, eps);
   } else {
-    row_rmsnorm_f32<<<1, threads_num>>>(
+    row_rmsnorm_f32_block_reduce<<<1, threads_num>>>(
         input_ptr, weight_ptr, output_ptr, size, eps);
   }
 }
