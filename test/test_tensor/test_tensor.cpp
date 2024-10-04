@@ -1,3 +1,4 @@
+#include <cuda_runtime_api.h>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include "base/buffer.h"
@@ -49,16 +50,36 @@ TEST(test_tensor, index) {
 }
 
 TEST(test_tensor, dims_stride) {
-    auto alloc = base::CPUDeviceAllocatorFactory::get_instance();
-    tensor::Tensor t1(base::DataType::kDataTypeFp32, 32, 32, 3, true, alloc);
+  auto alloc = base::CPUDeviceAllocatorFactory::get_instance();
+  tensor::Tensor t1(base::DataType::kDataTypeFp32, 32, 32, 3, true, alloc);
 
-    ASSERT_EQ(t1.is_empty(), false);
-    ASSERT_EQ(t1.get_dim(0), 32);
-    ASSERT_EQ(t1.get_dim(1), 32);
-    ASSERT_EQ(t1.get_dim(2), 3);
+  ASSERT_EQ(t1.is_empty(), false);
+  ASSERT_EQ(t1.get_dim(0), 32);
+  ASSERT_EQ(t1.get_dim(1), 32);
+  ASSERT_EQ(t1.get_dim(2), 3);
 
-    const auto& strides = t1.strides();
-    ASSERT_EQ(strides.at(0), 32 * 3);
-    ASSERT_EQ(strides.at(1), 3);
-    ASSERT_EQ(strides.at(2), 1);
+  const auto& strides = t1.strides();
+  ASSERT_EQ(strides.at(0), 32 * 3);
+  ASSERT_EQ(strides.at(1), 3);
+  ASSERT_EQ(strides.at(2), 1);
+}
+
+TEST(test_tensor, to_cu) {
+  using namespace base;
+  auto alloc_cpu = CPUDeviceAllocatorFactory::get_instance();
+  tensor::Tensor t1_cpu(DataType::kDataTypeFp32, 32, 32, true, alloc_cpu);
+  ASSERT_EQ(t1_cpu.is_empty(), false);
+  float* p1 = t1_cpu.ptr<float>();
+  for (int i = 0; i < 32 * 32; ++i) {
+    *(p1 + i) = 1.f;
+  }
+
+  t1_cpu.to_cuda();
+  float* p2 = new float[32 * 32];
+  cudaMemcpy(
+      p2, t1_cpu.ptr<float>(), sizeof(float) * 32 * 32, cudaMemcpyDeviceToHost);
+  for (int i = 0; i < 32 * 32; ++i) {
+    ASSERT_EQ(*(p2 + i), 1.f);
+  }
+  delete[] p2;
 }

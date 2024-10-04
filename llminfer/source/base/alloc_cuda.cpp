@@ -129,7 +129,9 @@ void CUDADeviceAllocator::release(void* ptr) const {
       }
     }
   }
+  
   state = cudaFree(ptr);
+  
   CHECK(state == cudaSuccess)
       << "Error: CUDA error when release memory on device";
 }
