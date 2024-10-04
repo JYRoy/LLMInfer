@@ -87,9 +87,51 @@ void CUDADeviceAllocator::release(void* ptr) const {
   if (!ptr) {
     return;
   }
-  if (ptr) {
-    cudaFree(ptr);
+  if (cuda_buffers_map_.empty()) {
+    return;
   }
+
+  cudaError_t state = cudaSuccess;
+  for (auto& it : cuda_buffers_map_) {
+    if (no_busy_cnt_[it.first] > 1024 * 1024 * 1024) {
+      auto& cuda_buffers = it.second;
+      std::vector<CudaMemoryBuffer> temp;
+      for (int i = 0; i < cuda_buffers.size(); i++) {
+        if (!cuda_buffers[i].busy) {
+          state = cudaSetDevice(it.first);
+          state = cudaFree(cuda_buffers[i].data);
+          CHECK(state == cudaSuccess)
+              << "Error: CUDA error when release memory on device " << it.first;
+        } else {
+          temp.push_back(cuda_buffers[i]);
+        }
+      }
+      cuda_buffers.clear();
+      it.second = temp;
+      no_busy_cnt_[it.first] = 0;
+    }
+  }
+
+  for (auto& it : cuda_buffers_map_) {
+    auto& cuda_buffers = it.second;
+    for (int i = 0; i < cuda_buffers.size(); i++) {
+      if (cuda_buffers[i].data == ptr) {
+        no_busy_cnt_[it.first] += cuda_buffers[i].byte_size;
+        cuda_buffers[i].busy = false;
+        return;
+      }
+    }
+    auto& big_buffers = big_buffers_map_[it.first];
+    for (int i = 0; i < big_buffers.size(); i++) {
+      if (big_buffers[i].data == ptr) {
+        big_buffers[i].busy = false;
+        return;
+      }
+    }
+  }
+  state = cudaFree(ptr);
+  CHECK(state == cudaSuccess)
+      << "Error: CUDA error when release memory on device";
 }
 
 std::shared_ptr<CUDADeviceAllocator> CUDADeviceAllocatorFactory::instance =
