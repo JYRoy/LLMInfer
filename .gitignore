@@ -268,7 +268,7 @@ fabric.properties
 *.exe
 *.out
 *.app
-
+*.bin
 
 # CMake ================================
 bin/
