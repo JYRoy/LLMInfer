@@ -71,6 +71,8 @@ class Tensor {
 
   size_t size() const;
   size_t byte_size() const;
+  int32_t dims_size() const;
+  base::DataType data_type() const;
   int32_t get_dim(int32_t idx) const;
   base::DeviceType device_type() const;
   std::vector<size_t> strides() const;

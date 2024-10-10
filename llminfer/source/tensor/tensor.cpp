@@ -120,6 +120,14 @@ void Tensor::init_buffer(
   }
 }
 
+int32_t Tensor::dims_size() const {
+  return static_cast<int32_t>(dims_.size());
+}
+
+base::DataType Tensor::data_type() const {
+  return data_type_;
+}
+
 bool Tensor::allocate(
     std::shared_ptr<base::DeviceAllocator> allocator,
     bool need_realloc) {

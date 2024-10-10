@@ -83,9 +83,19 @@ class Status {
 
 namespace error {
 
+Status Success(const std::string& err_msg = "");
+
+Status FunctionNotImplement(const std::string& err_msg = "");
+
 Status PathNotValid(const std::string& err_msg = "");
 
 Status ModelParseError(const std::string& err_msg = "");
+
+Status InternalError(const std::string& err_msg = "");
+
+Status KeyHasExits(const std::string& err_msg = "");
+
+Status InvalidArgument(const std::string& err_msg = "");
 } // namespace error
 } // namespace base
 

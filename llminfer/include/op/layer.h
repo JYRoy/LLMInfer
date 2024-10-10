@@ -29,6 +29,45 @@ class BaseLayer {
       LayerType layer_type,
       base::DataType data_type,
       std::string layer_name = "");
+
+  base::DataType data_type() const;
+
+  LayerType layer_type() const;
+
+  virtual base::Status init() = 0;
+
+  virtual base::Status forward() = 0;
+
+  virtual base::Status forward(
+      const tensor::Tensor& input1,
+      const tensor::Tensor& output1) = 0;
+
+  virtual base::Status forward(
+      const tensor::Tensor& input1,
+      const tensor::Tensor& input2,
+      const tensor::Tensor& output1) = 0;
+
+  virtual base::Status forward(
+      const tensor::Tensor& input1,
+      const tensor::Tensor& input2,
+      const tensor::Tensor& input3,
+      const tensor::Tensor& output1) = 0;
+
+  virtual base::Status forward(
+      const tensor::Tensor& input1,
+      const tensor::Tensor& input2,
+      const tensor::Tensor& input3,
+      const tensor::Tensor& input4,
+      const tensor::Tensor& output1) = 0;
+
+  virtual base::Status forward(
+      const tensor::Tensor& input1,
+      const tensor::Tensor& input2,
+      const tensor::Tensor& input3,
+      const tensor::Tensor& input4,
+      const tensor::Tensor& input5,
+      const tensor::Tensor& output1) = 0;
+
   virtual void set_input(int32_t idx, const tensor::Tensor& input) = 0;
 
   virtual void set_output(int32_t idx, const tensor::Tensor& output) = 0;
@@ -53,8 +92,6 @@ class BaseLayer {
 
   void set_device_type(base::DeviceType device_type);
 
-  base::DataType data_type() const;
-  LayerType layer_type() const;
   base::DeviceType device_type() const;
 
  protected:
@@ -70,6 +107,53 @@ class Layer : public BaseLayer {
       base::DeviceType device_type,
       LayerType layer_type,
       std::string layer_name = "");
+
+  base::Status init() override;
+
+  base::Status check_tensor(
+      const tensor::Tensor& tensor,
+      base::DeviceType device_type,
+      base::DataType data_type) const;
+
+  base::Status check_tensor_with_dim(
+      const tensor::Tensor& tensor,
+      base::DeviceType device_type,
+      base::DataType data_type,
+      ...) const;
+
+  base::Status check() const override;
+
+  base::Status forward() override;
+
+  base::Status forward(
+      const tensor::Tensor& input1,
+      const tensor::Tensor& output1) override;
+
+  base::Status forward(
+      const tensor::Tensor& input1,
+      const tensor::Tensor& input2,
+      const tensor::Tensor& output1) override;
+
+  base::Status forward(
+      const tensor::Tensor& input1,
+      const tensor::Tensor& input2,
+      const tensor::Tensor& input3,
+      const tensor::Tensor& output1) override;
+
+  base::Status forward(
+      const tensor::Tensor& input1,
+      const tensor::Tensor& input2,
+      const tensor::Tensor& input3,
+      const tensor::Tensor& input4,
+      const tensor::Tensor& output1) override;
+
+  base::Status forward(
+      const tensor::Tensor& input1,
+      const tensor::Tensor& input2,
+      const tensor::Tensor& input3,
+      const tensor::Tensor& input4,
+      const tensor::Tensor& input5,
+      const tensor::Tensor& output1) override;
 
   // idx 表示第几（idx）个输入
   void set_input(int32_t idx, const tensor::Tensor& input) override; // 传入输入
