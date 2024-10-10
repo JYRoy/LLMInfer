@@ -77,6 +77,11 @@ class Tensor {
   base::DeviceType device_type() const;
   std::vector<size_t> strides() const;
 
+  void set_device_type(base::DeviceType device_type) const;
+
+  bool assign(std::shared_ptr<base::Buffer> buffer);
+
+
   bool is_empty() const;
 
   template <typename T>

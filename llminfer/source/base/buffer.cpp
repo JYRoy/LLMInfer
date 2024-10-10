@@ -65,6 +65,10 @@ DeviceType Buffer::device_type() const {
   return device_type_;
 }
 
+void Buffer::set_device_type(DeviceType device_type) {
+  device_type_ = device_type;
+}
+
 void Buffer::copy_from(const Buffer& buffer) const {
   CHECK(allocator_ != nullptr);
   CHECK(buffer.ptr_ != nullptr);

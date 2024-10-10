@@ -124,6 +124,34 @@ int32_t Tensor::dims_size() const {
   return static_cast<int32_t>(dims_.size());
 }
 
+void Tensor::set_device_type(base::DeviceType device_type) const {
+  if (buffer_) {
+    buffer_->set_device_type(device_type);
+  }
+}
+
+bool Tensor::assign(std::shared_ptr<base::Buffer> buffer) {
+  if (!buffer) {
+    LOG(ERROR)
+        << "The buffer parameter in the assign function is null pointer!";
+    return false;
+  }
+  if (buffer_) {
+    if (buffer_->device_type() != buffer->device_type()) {
+      LOG(ERROR)
+          << "The device type of the new buffer is different from the original one.";
+    }
+  }
+
+  size_t byte_size = this->byte_size();
+  if (byte_size > buffer->byte_size()) {
+    LOG(ERROR) << "The size of buffer is too small for the tensor!";
+    return false;
+  }
+  buffer_ = buffer;
+  return true;
+}
+
 base::DataType Tensor::data_type() const {
   return data_type_;
 }
