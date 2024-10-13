@@ -6,6 +6,12 @@
 #include <string>
 
 namespace base {
+
+#define UNUSED(expr) \
+  do {               \
+    (void)(expr);    \
+  } while (0)
+
 enum class DeviceType : uint8_t {
   kDeviceUnknown = 0,
   kDeviceCPU = 1,
