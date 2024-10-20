@@ -290,9 +290,10 @@ base::Status LayerParam::set_weight(
   CHECK_GE(idx, 0);
   CHECK_LT(idx, weights_.size());
   CHECK_NE(weight_ptr, nullptr);
-
+  // 计算权重的数量，计算方法是将维度依次相乘
   size_t size = std::accumulate(
       dims.begin(), dims.end(), sizeof(float), std::multiplies<>());
+  // 根据项目设计，权重指针需要保存在buffer中，因此需要创建一个buffer来管理内存资源
   std::shared_ptr<base::Buffer> buffer = std::make_shared<base::Buffer>(
       size, nullptr, const_cast<void*>(weight_ptr), true);
   if (device_type != base::DeviceType::kDeviceUnknown) {
@@ -300,6 +301,7 @@ base::Status LayerParam::set_weight(
   }
 
   if (!is_quant_layer_) {
+    // 创建算子的tensor权重，默认放于cpu上
     tensor::Tensor weight(base::DataType::kDataTypeFp32, dims);
     weight.set_device_type(device_type);
     CHECK(weight.assign(buffer));
