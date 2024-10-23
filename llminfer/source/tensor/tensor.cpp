@@ -223,6 +223,10 @@ std::vector<size_t> Tensor::strides() const {
   return strides;
 }
 
+std::shared_ptr<base::Buffer> Tensor::get_buffer() const {
+  return buffer_;
+}
+
 Tensor Tensor::clone() const {
   Tensor new_tensor = *this;
   size_t byte_size = this->byte_size();

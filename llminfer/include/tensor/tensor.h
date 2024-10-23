@@ -69,6 +69,8 @@ class Tensor {
       std::shared_ptr<base::DeviceAllocator> allocator,
       bool need_realloc = false);
 
+  std::shared_ptr<base::Buffer> get_buffer() const;
+
   size_t size() const;
   size_t byte_size() const;
   int32_t dims_size() const;
@@ -80,7 +82,6 @@ class Tensor {
   void set_device_type(base::DeviceType device_type) const;
 
   bool assign(std::shared_ptr<base::Buffer> buffer);
-
 
   bool is_empty() const;
 
