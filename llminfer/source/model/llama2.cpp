@@ -5,15 +5,39 @@
 #include <utility>
 
 namespace model {
-// LLama2Model::LLama2Model(
-//     std::string token_path,
-//     std::string model_path,
-//     bool is_quant_model)
-//     : Model(
-//           base::ModelType::kModelTypeLLama2,
-//           std::move(token_path),
-//           std::move(model_path),
-//           is_quant_model) {}
+LLama2Model::LLama2Model(
+    std::string token_path,
+    std::string model_path,
+    bool is_quant_model)
+    : Model(
+          base::ModelType::kModelTypeLLama2,
+          std::move(token_path),
+          std::move(model_path),
+          is_quant_model) {}
+
+std::pair<tensor::Tensor, tensor::Tensor> LLama2Model::slice_kv_cache(
+    int32_t layer_idx,
+    int32_t token_pos) const {
+  int32_t layer_offset = layer_idx * config_->seq_len_ * config_->kv_dim_;
+  int32_t cache_offset = layer_offset + token_pos * config_->kv_dim_;
+
+  float* key_cache_ptr = const_cast<float*>(
+      get_buffer(ModelBufferType::kKeyCache).ptr<float>(cache_offset));
+  float* val_cache_ptr = const_cast<float*>(
+      get_buffer(ModelBufferType::kValueCache).ptr<float>(cache_offset));
+
+  auto key_cache = std::make_shared<base::Buffer>(
+      config_->kv_dim_ * sizeof(float), nullptr, key_cache_ptr, true);
+  auto val_cache = std::make_shared<base::Buffer>(
+      config_->kv_dim_ * sizeof(float), nullptr, val_cache_ptr, true);
+  key_cache->set_device_type(device_type_);
+  val_cache->set_device_type(device_type_);
+  tensor::Tensor key(base::DataType::kDataTypeFp32, config_->kv_dim_);
+  tensor::Tensor val(base::DataType::kDataTypeFp32, config_->kv_dim_);
+  key.assign(key_cache);
+  val.assign(val_cache);
+  return {key, val};
+}
 
 // void LLama2Model::create_param_layers() {
 //   CHECK(!is_quant_model_);
@@ -35,7 +59,8 @@ namespace model {
 
 //   // create all matmul layer (linear op)
 //   int32_t dim = config_->dim_;
-//   size_t pos = dim * std::abs(config_->vocab_size_) + dim * config_->layer_num_;
+//   size_t pos = dim * std::abs(config_->vocab_size_) + dim *
+//   config_->layer_num_;
 
 //   // create weight matrix for query
 //   for (int32_t i = 0; i < config_->layer_num_; ++i) {
@@ -49,7 +74,8 @@ namespace model {
 //   // create weight matrix for key
 //   for (int32_t i = 0; i < config_->layer_num_; ++i) {
 //     auto wk =
-//         std::make_shared<op::MatmulLayer>(device_type_, config_->kv_dim_, dim);
+//         std::make_shared<op::MatmulLayer>(device_type_, config_->kv_dim_,
+//         dim);
 //     wk->set_weight(
 //         0,
 //         {config_->kv_dim_, dim},
@@ -62,7 +88,8 @@ namespace model {
 //   // create weight matrix for value
 //   for (int32_t i = 0; i < config_->layer_num_; ++i) {
 //     auto wv =
-//         std::make_shared<op::MatmulLayer>(device_type_, config_->kv_dim_, dim);
+//         std::make_shared<op::MatmulLayer>(device_type_, config_->kv_dim_,
+//         dim);
 //     wv->set_weight(
 //         0,
 //         {config_->kv_dim_, dim},
@@ -87,8 +114,8 @@ namespace model {
 //   // w1 layers
 //   int32_t hidden_dim = config_->hidden_dim_;
 //   for (int32_t i = 0; i < config_->layer_num_; ++i) {
-//     auto w1 = std::make_shared<op::MatmulLayer>(device_type_, hidden_dim, dim);
-//     w1->set_weight(
+//     auto w1 = std::make_shared<op::MatmulLayer>(device_type_, hidden_dim,
+//     dim); w1->set_weight(
 //         0,
 //         {hidden_dim, dim},
 //         this->raw_model_data_->weight(pos),
@@ -99,8 +126,8 @@ namespace model {
 
 //   // w2 layers
 //   for (int32_t i = 0; i < config_->layer_num_; ++i) {
-//     auto w2 = std::make_shared<op::MatmulLayer>(device_type_, dim, hidden_dim);
-//     w2->set_weight(
+//     auto w2 = std::make_shared<op::MatmulLayer>(device_type_, dim,
+//     hidden_dim); w2->set_weight(
 //         0,
 //         {dim, hidden_dim},
 //         this->raw_model_data_->weight(pos),
@@ -111,8 +138,8 @@ namespace model {
 
 //   // w3 layers
 //   for (int32_t i = 0; i < config_->layer_num_; ++i) {
-//     auto w3 = std::make_shared<op::MatmulLayer>(device_type_, hidden_dim, dim);
-//     w3->set_weight(
+//     auto w3 = std::make_shared<op::MatmulLayer>(device_type_, hidden_dim,
+//     dim); w3->set_weight(
 //         0,
 //         {hidden_dim, dim},
 //         this->raw_model_data_->weight(pos),
@@ -204,7 +231,8 @@ namespace model {
 //       config_->head_num_,
 //       config_->head_size_);
 
-//   llama_layers_->add_layer_ = std::make_shared<op::VecAddLayer>(device_type_);
+//   llama_layers_->add_layer_ =
+//   std::make_shared<op::VecAddLayer>(device_type_);
 
 //   llama_layers_->swiglu_layer_ =
 //       std::make_shared<op::SwiGLULayer>(device_type_, config_->hidden_dim_);

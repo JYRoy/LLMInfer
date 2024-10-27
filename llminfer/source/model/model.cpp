@@ -2,6 +2,15 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 namespace model {
+Model::Model(
+    base::ModelType model_type,
+    std::string token_path,
+    std::string model_path,
+    bool is_quant_model)
+    : model_type_(model_type),
+      token_path_(std::move(token_path)),
+      model_path_(std::move(model_path)),
+      is_quant_model_(is_quant_model) {}
 
 base::Status Model::read_model_file() {
   using namespace base;
@@ -28,6 +37,16 @@ base::Status Model::read_model_file() {
         "Failed to retrieve the configuration information from the model "
         "file.");
   }
+}
+
+tensor::Tensor& Model::get_buffer(ModelBufferType buffer_idx) {
+  CHECK_GT(buffers_.count(buffer_idx), 0) << int(buffer_idx);
+  return buffers_.at(buffer_idx);
+}
+
+const tensor::Tensor& Model::get_buffer(ModelBufferType buffer_idx) const {
+  CHECK_GT(buffers_.count(buffer_idx), 0);
+  return buffers_.at(buffer_idx);
 }
 
 } // namespace model
