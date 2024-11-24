@@ -91,6 +91,9 @@ def legacy_export(model, filepath):
     header = struct.pack('iiiiiii', p.dim, hidden_dim, p.n_layers, p.n_heads,
                          n_kv_heads, p.vocab_size, p.max_seq_len)
     out_file.write(header)
+    
+    # 依次写入 token embedding 和 每个 transformer 块中的 attention_norm、wq、wk 和 wv 等参数
+    # 注意在 mmap 打开权重文件后也要按照相同的顺序读取参数
 
     # next write out the embedding weights
     serialize_fp32(out_file, model.tok_embeddings.weight)

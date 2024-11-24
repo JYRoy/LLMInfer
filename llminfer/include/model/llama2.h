@@ -66,12 +66,12 @@ class LLama2Model : public Model {
   //       const op::EmbeddingOutput& embedding_output,
   //       bool is_prompt) const;
 
-  //  private:
-  //   void init_mem() override;
+ private:
+  // void init_mem() override;
 
   //   base::Status create_layers() override;
 
-  //   void create_param_layers() override;
+  void create_param_layers() override;
 
   //   void create_nonparam_layers() override;
 
@@ -84,8 +84,7 @@ class LLama2Model : public Model {
 
   //   void feed_forward(int32_t layer_idx, const tensor::Tensor& input) const;
 
-  //   void attention_qkv(int32_t layer_idx, const tensor::Tensor& pos_tensor)
-  //   const;
+  void attention_qkv(int32_t layer_idx, const tensor::Tensor& pos_tensor) const;
 
   //   void cls_logits(const tensor::Tensor& input) const;
 
