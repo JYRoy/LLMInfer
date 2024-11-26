@@ -40,4 +40,15 @@ MatmulKernel get_matmul_kernel(base::DeviceType device_type) {
   }
 }
 
+MHAKernel get_mha_kernel(base::DeviceType device_type) {
+  if (device_type == base::DeviceType::kDeviceCPU) {
+    return mha_kernel;
+  } else if (device_type == base::DeviceType::kDeviceCUDA) {
+    return mha_kernel_cu;
+  } else {
+    LOG(FATAL) << "Unknown device type for get an mha kernel.";
+    return nullptr;
+  }
+}
+
 } // namespace kernel
