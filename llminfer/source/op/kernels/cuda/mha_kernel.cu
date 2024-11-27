@@ -3,6 +3,54 @@
 #include <cub/cub.cuh>
 #include "mha_kernel.cuh"
 namespace kernel {
+// 每个 block 中都会调用 softmax
+__device__ void softmax_gpu(float* __restrict__ x, int size) {
+  // x 是 q@k 之后的 attention score
+  // x 的 shape 为 (1, 1+cache_len)
+  int tid = threadIdx.x; // 如果 block 有线程 0，1，2..., 31
+  int step = blockDim.x; // step = 32
+
+  // find max value (for numerical stability)
+  float max_val = tid < size ? x[tid] : 0;
+  // 每个线程求的是局部位置的局部最大值
+  // 比如线程 0，求的是 0，32，64... 等位置的局部最大值
+  for (int i = tid + step; i < size; i += step) {
+    if (x[i] > max_val) {
+      max_val = x[i];
+    }
+  }
+  // 再将线程块的所有线程的局部最大值进行规约
+  // BlockReduceMax
+  using BlockReduce = cub::BlockReduce<float, 128>;
+  __shared__ BlockReduce::TempStorage temp;
+  __shared__ float shared_val;
+  max_val = BlockReduce(temp).Reduce(max_val, cub::Max());
+  if (threadIdx.x == 0) {
+    shared_val = max_val;
+  }
+  __syncthreads();
+  // 得到一个 block 中最大值也就是一个 score head 中的最大值
+  // 一个 (1, 1+cache_len)下的最大值
+  max_val = shared_val;
+
+  // 求 exp 的局部和
+  float sum = 0.0f;
+  for (int i = tid; i < size; i += step) {
+    x[i] = expf(x[i] - max_val);
+    sum += x[i];
+  }
+  // 求 exp 的全局和
+  sum = BlockReduce(temp).Sum(sum);
+  if (threadIdx.x == 0) {
+    shared_val = sum;
+  }
+  __syncthreads();
+  sum = shared_val;
+
+  for (int i = tid; i < size; i += step) {
+    x[i] /= sum;
+  }
+}
 
 __global__ void multi_head_attention_kernel(
     int32_t pos, // cache_len + 1
