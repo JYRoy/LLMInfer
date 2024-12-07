@@ -28,7 +28,7 @@ void emb_kernel_normal(
             src_ptr,
             dest_ptr,
             weight_dim * sizeof(float),
-            base::MemcpyKind::kMemcpyCPU2CPU);
+            base::MemcpyKind::kMemcpyH2H);
       } else {
         LOG(FATAL)
             << "Unknown device type of weight tensor in the embedding layer.";

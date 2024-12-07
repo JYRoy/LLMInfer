@@ -279,4 +279,23 @@ void Tensor::to_cpu() {
   }
 }
 
+void Tensor::reshape(const std::vector<int32_t>& dims) {
+  size_t size = reduce_dimension(dims.begin(), dims.end(), 1);
+  if (!buffer_) {
+    this->dims_ = dims;
+    this->size_ = size;
+    return;
+  }
+
+  if (size > size_) {
+    auto new_buffer = std::make_shared<base::Buffer>(
+        size * base::DataTypeSize(this->data_type_), buffer_->allocator());
+    CHECK(new_buffer->allocate());
+    new_buffer->copy_from(buffer_.get());
+    this->buffer_ = new_buffer;
+  }
+  this->dims_ = dims;
+  this->size_ = size;
+}
+
 } // namespace tensor

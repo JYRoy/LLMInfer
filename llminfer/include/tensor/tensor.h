@@ -109,6 +109,8 @@ class Tensor {
 
   void to_cuda(cudaStream_t stream = nullptr);
 
+  void reshape(const std::vector<int32_t>& dims);
+
  private:
   size_t size_ = 0; // number of elements
   std::vector<int32_t> dims_;

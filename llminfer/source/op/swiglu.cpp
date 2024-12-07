@@ -1,5 +1,5 @@
 #include "op/swiglu.h"
-#include "kernels/cpu/swiglu_kernel.h"
+// #include "kernels/cpu/swiglu_kernel.h"
 #include "kernels/kernels_interface.h"
 #include "op/layer.h"
 namespace op {
